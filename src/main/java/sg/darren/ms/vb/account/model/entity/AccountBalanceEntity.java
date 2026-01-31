@@ -2,18 +2,18 @@ package sg.darren.ms.vb.account.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import sg.darren.ms.vb.account.model.entity.enums.AccountStatusEnum;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 @Entity
-@Table(name = "tbl_account")
+@Table(name = "tbl_account_balance")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AccountEntity {
+public class AccountBalanceEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,11 +21,13 @@ public class AccountEntity {
 
     private String accountNo;
 
-    private String accountName;
+    private String currency;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private AccountStatusEnum accountStatus;
+    private String totalDebit;
+
+    private String totalCredit;
+
+    private BigDecimal balance;
 
     @Column(name = "created_on", updatable = false)
     private Date createdOn;
@@ -36,4 +38,5 @@ public class AccountEntity {
     private Date updatedOn;
 
     private String updatedBy;
+
 }
