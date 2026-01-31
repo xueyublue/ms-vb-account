@@ -11,6 +11,8 @@ public class AccountPostingRequest {
 
     String accountNo;
 
+    String currency;
+
     String creditDebitIndicator;
 
     BigDecimal amount;
