@@ -7,7 +7,14 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 @Entity
-@Table(name = "tbl_account_balance")
+@Table(name = "tbl_account_balance",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"accountNo", "currency"})
+        },
+        indexes = {
+                @Index(name = "idx_accountNoCurrency", columnList = "accountNo,currency")
+        }
+)
 @Getter
 @Setter
 @Builder

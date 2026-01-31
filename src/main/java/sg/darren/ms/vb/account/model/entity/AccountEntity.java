@@ -7,7 +7,14 @@ import sg.darren.ms.vb.account.model.entity.enums.AccountStatusEnum;
 import java.util.Date;
 
 @Entity
-@Table(name = "tbl_account")
+@Table(name = "tbl_account",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"accountNo"})
+        },
+        indexes = {
+                @Index(name = "idx_accountNoStatus", columnList = "accountNo,status")
+        }
+)
 @Getter
 @Setter
 @Builder

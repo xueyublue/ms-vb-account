@@ -19,6 +19,7 @@ import java.util.Map;
 @ControllerAdvice
 @Slf4j
 public class ControllerExceptionAdvice {
+
     @ExceptionHandler(value = Exception.class)
     public ResponseEntity<Object> handleException(Exception exception) {
         log.error("{}: {}", new Date().getTime(), exception.getMessage(), exception);

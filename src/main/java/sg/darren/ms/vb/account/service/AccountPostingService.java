@@ -2,7 +2,13 @@ package sg.darren.ms.vb.account.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import sg.darren.ms.vb.account.exception.ApplicationException;
 import sg.darren.ms.vb.account.exception.DataNotFoundException;
 import sg.darren.ms.vb.account.model.entity.AccountBalanceEntity;
 import sg.darren.ms.vb.account.model.entity.AccountEntity;
@@ -22,6 +28,18 @@ public class AccountPostingService {
     private final AccountRepository accountRepository;
     private final AccountBalanceRepository accountBalanceRepository;
 
+    @Retryable(retryFor = {
+            ObjectOptimisticLockingFailureException.class,  // for balance update failed when version not matched
+            DataIntegrityViolationException.class   // for balance insert failed when same account number and currency exists
+    },
+            maxAttemptsExpression = "100",
+            backoff = @Backoff(
+                    delayExpression = "100",
+                    maxDelayExpression = "1000",
+                    multiplierExpression = "1.1",
+                    random = false
+            )
+    )
     public AccountPostingResponse posting(AccountPostingRequest request) {
         // validate account
         AccountEntity account = accountRepository.findByAccountNo(request.getAccountNo());
@@ -51,6 +69,12 @@ public class AccountPostingService {
                 .accountNo(request.getAccountNo())
                 .balance(accountBalance.getBalance())
                 .build();
+    }
+
+    @Recover
+    public AccountPostingResponse recover(Exception ex, AccountPostingRequest request) {
+        log.error("Failed to update account balance after max retry, accountNo={}, uniqueReferenceNo={}, error={}", request.getAccountNo(), request.getUniqueReferenceNo(), ex.getMessage());
+        throw ApplicationException.retryFailed(request.getUniqueReferenceNo());
     }
 
 }
