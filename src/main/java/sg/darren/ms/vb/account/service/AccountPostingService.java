@@ -12,13 +12,16 @@ import sg.darren.ms.vb.account.exception.ApplicationException;
 import sg.darren.ms.vb.account.exception.DataNotFoundException;
 import sg.darren.ms.vb.account.model.entity.AccountBalanceEntity;
 import sg.darren.ms.vb.account.model.entity.AccountEntity;
+import sg.darren.ms.vb.account.model.entity.RetryFailedEntity;
 import sg.darren.ms.vb.account.model.entity.enums.AccountStatusEnum;
 import sg.darren.ms.vb.account.model.http.accountPosting.AccountPostingRequest;
 import sg.darren.ms.vb.account.model.http.accountPosting.AccountPostingResponse;
 import sg.darren.ms.vb.account.reposiory.AccountBalanceRepository;
 import sg.darren.ms.vb.account.reposiory.AccountRepository;
+import sg.darren.ms.vb.account.reposiory.RetryFailedRepository;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 @Service
 @Slf4j
@@ -27,6 +30,7 @@ public class AccountPostingService {
 
     private final AccountRepository accountRepository;
     private final AccountBalanceRepository accountBalanceRepository;
+    private final RetryFailedRepository retryFailedRepository;
 
     @Retryable(retryFor = {
             ObjectOptimisticLockingFailureException.class,  // for balance update failed when version not matched
@@ -56,12 +60,14 @@ public class AccountPostingService {
                     .accountNo(request.getAccountNo())
                     .currency(request.getCurrency())
                     .balance(request.getCreditDebitIndicator().equalsIgnoreCase("C") ? request.getAmount() : request.getAmount().multiply(BigDecimal.valueOf(-1)))
+                    .createdOn(new Date())
                     .version(Long.valueOf("1"))
                     .build();
             accountBalanceRepository.save(accountBalance);
         } else {
             BigDecimal newBalance = request.getCreditDebitIndicator().equalsIgnoreCase("C") ? accountBalance.getBalance().add(request.getAmount()) : accountBalance.getBalance().subtract(request.getAmount());
             accountBalance.setBalance(newBalance);
+            accountBalance.setUpdatedOn(new Date());
             accountBalanceRepository.save(accountBalance);
         }
         return AccountPostingResponse.builder()
@@ -73,7 +79,16 @@ public class AccountPostingService {
 
     @Recover
     public AccountPostingResponse recover(Exception ex, AccountPostingRequest request) {
-        log.error("Failed to update account balance after max retry, accountNo={}, uniqueReferenceNo={}, error={}", request.getAccountNo(), request.getUniqueReferenceNo(), ex.getMessage());
+        log.error("[recover] Failed to update account balance, accountNo={}, uniqueReferenceNo={}, error={}", request.getAccountNo(), request.getUniqueReferenceNo(), ex.getMessage());
+        RetryFailedEntity retryFailedEntity = RetryFailedEntity.builder()
+                .accountNo(request.getAccountNo())
+                .currency(request.getCurrency())
+                .uniqueReferenceNo(request.getUniqueReferenceNo())
+                .creditDebitIndicator(request.getCreditDebitIndicator())
+                .amount(request.getAmount())
+                .createdOn(new Date())
+                .build();
+        retryFailedRepository.save(retryFailedEntity);
         throw ApplicationException.retryFailed(request.getUniqueReferenceNo());
     }
 

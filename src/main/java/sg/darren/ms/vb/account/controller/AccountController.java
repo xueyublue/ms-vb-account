@@ -1,5 +1,6 @@
 package sg.darren.ms.vb.account.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,7 +16,7 @@ public class AccountController {
     private final AccountPostingService accountPostingService;
 
     @PostMapping(path = "/accout-posting")
-    public AccountPostingResponse accountPosting(@RequestBody AccountPostingRequest request) {
+    public AccountPostingResponse accountPosting(@RequestBody @Valid AccountPostingRequest request) {
         return accountPostingService.posting(request);
     }
 }

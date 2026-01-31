@@ -7,10 +7,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import sg.darren.ms.vb.account.exception.DataDuplicateException;
-import sg.darren.ms.vb.account.exception.DataNotFoundException;
-import sg.darren.ms.vb.account.exception.InvalidInputException;
-import sg.darren.ms.vb.account.exception.UnauthorizedException;
+import sg.darren.ms.vb.account.exception.*;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -24,6 +21,12 @@ public class ControllerExceptionAdvice {
     public ResponseEntity<Object> handleException(Exception exception) {
         log.error("{}: {}", new Date().getTime(), exception.getMessage(), exception);
         return new ResponseEntity<>("Unhandled exception occurred.", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(value = ApplicationException.class)
+    public ResponseEntity<Object> handleApplicationException(ApplicationException exception) {
+        log.error("{}: {}", new Date().getTime(), exception.getMessage(), exception);
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(value = UnauthorizedException.class)
