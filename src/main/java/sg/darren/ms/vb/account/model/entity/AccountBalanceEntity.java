@@ -39,4 +39,6 @@ public class AccountBalanceEntity {
 
     private String updatedBy;
 
+    @Version
+    private Long version;
 }

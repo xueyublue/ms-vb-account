@@ -38,6 +38,7 @@ public class AccountPostingService {
                     .accountNo(request.getAccountNo())
                     .currency(request.getCurrency())
                     .balance(request.getCreditDebitIndicator().equalsIgnoreCase("C") ? request.getAmount() : request.getAmount().multiply(BigDecimal.valueOf(-1)))
+                    .version(Long.valueOf("1"))
                     .build();
             accountBalanceRepository.save(accountBalance);
         } else {
