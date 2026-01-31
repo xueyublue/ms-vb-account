@@ -11,13 +11,19 @@ import org.springframework.stereotype.Component;
 public class AccountPostingRetryListener implements RetryListener {
     @Override
     public <T, E extends Throwable> boolean open(RetryContext context, RetryCallback<T, E> callback) {
-        log.warn("retry count={}", context.getRetryCount());
+        int retryCount = context.getRetryCount();
+        if (retryCount > 0) {
+            log.warn("retry count={}", context.getRetryCount());
+        }
         return RetryListener.super.open(context, callback);
     }
 
     @Override
     public <T, E extends Throwable> void close(RetryContext context, RetryCallback<T, E> callback, Throwable throwable) {
-        log.warn("retry completed after max retry={}", context.getRetryCount());
+        int retryCount = context.getRetryCount();
+        if (retryCount > 0) {
+            log.warn("retry completed after max retry={}", context.getRetryCount());
+        }
         RetryListener.super.close(context, callback, throwable);
     }
 }

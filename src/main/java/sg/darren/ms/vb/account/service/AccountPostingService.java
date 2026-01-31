@@ -59,13 +59,13 @@ public class AccountPostingService {
             accountBalance = AccountBalanceEntity.builder()
                     .accountNo(request.getAccountNo())
                     .currency(request.getCurrency())
-                    .balance(request.getCreditDebitIndicator().equalsIgnoreCase("C") ? request.getAmount() : request.getAmount().multiply(BigDecimal.valueOf(-1)))
+                    .balance(request.isCredit() ? request.getAmount() : request.getAmount().multiply(BigDecimal.valueOf(-1)))
                     .createdOn(new Date())
                     .version(Long.valueOf("1"))
                     .build();
             accountBalanceRepository.save(accountBalance);
         } else {
-            BigDecimal newBalance = request.getCreditDebitIndicator().equalsIgnoreCase("C") ? accountBalance.getBalance().add(request.getAmount()) : accountBalance.getBalance().subtract(request.getAmount());
+            BigDecimal newBalance = request.isCredit() ? accountBalance.getBalance().add(request.getAmount()) : accountBalance.getBalance().subtract(request.getAmount());
             accountBalance.setBalance(newBalance);
             accountBalance.setUpdatedOn(new Date());
             accountBalanceRepository.save(accountBalance);
