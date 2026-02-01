@@ -78,7 +78,7 @@ public class AccountPostingService {
     }
 
     @Recover
-    public AccountPostingResponse recover(Exception ex, AccountPostingRequest request) {
+    public AccountPostingResponse recover(Exception ex, AccountPostingRequest request) throws Exception {
         log.error("[recover] Failed to update account balance, accountNo={}, uniqueReferenceNo={}, error={}", request.getAccountNo(), request.getUniqueReferenceNo(), ex.getMessage());
         RetryFailedEntity retryFailedEntity = RetryFailedEntity.builder()
                 .accountNo(request.getAccountNo())
@@ -89,7 +89,7 @@ public class AccountPostingService {
                 .createdOn(new Date())
                 .build();
         retryFailedRepository.save(retryFailedEntity);
-        throw ApplicationException.retryFailed(request.getUniqueReferenceNo());
+        throw ex;
     }
 
 }

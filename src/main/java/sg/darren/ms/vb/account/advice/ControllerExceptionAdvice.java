@@ -20,7 +20,7 @@ public class ControllerExceptionAdvice {
     @ExceptionHandler(value = Exception.class)
     public ResponseEntity<Object> handleException(Exception exception) {
         log.error("{}: {}", new Date().getTime(), exception.getMessage(), exception);
-        return new ResponseEntity<>("Unhandled exception occurred.", HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(value = ApplicationException.class)
