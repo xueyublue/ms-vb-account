@@ -32,7 +32,7 @@ public class AccountEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
-    private AccountStatusEnum accountStatus;
+    private AccountStatusEnum status;
 
     @Column(name = "created_on", updatable = false)
     private Date createdOn;

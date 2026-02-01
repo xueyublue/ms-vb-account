@@ -8,12 +8,13 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
-import sg.darren.ms.vb.account.exception.ApplicationException;
 import sg.darren.ms.vb.account.exception.DataNotFoundException;
 import sg.darren.ms.vb.account.model.entity.AccountBalanceEntity;
 import sg.darren.ms.vb.account.model.entity.AccountEntity;
 import sg.darren.ms.vb.account.model.entity.RetryFailedEntity;
 import sg.darren.ms.vb.account.model.entity.enums.AccountStatusEnum;
+import sg.darren.ms.vb.account.model.http.accountInquiry.AccountInquiryRequest;
+import sg.darren.ms.vb.account.model.http.accountInquiry.AccountInquiryResponse;
 import sg.darren.ms.vb.account.model.http.accountPosting.AccountPostingRequest;
 import sg.darren.ms.vb.account.model.http.accountPosting.AccountPostingResponse;
 import sg.darren.ms.vb.account.reposiory.AccountBalanceRepository;
@@ -31,6 +32,23 @@ public class AccountPostingService {
     private final AccountRepository accountRepository;
     private final AccountBalanceRepository accountBalanceRepository;
     private final RetryFailedRepository retryFailedRepository;
+
+    public AccountInquiryResponse inquiry(AccountInquiryRequest request) {
+        // validate account
+        AccountEntity account = accountRepository.findByAccountNoAndStatus(request.getAccountNo(), AccountStatusEnum.valueOf(request.getStatus()));
+        if (account == null) {
+            throw DataNotFoundException.accountNumberNotFound(request.getAccountNo());
+        }
+        return AccountInquiryResponse.builder()
+                .accountNo(account.getAccountNo())
+                .accountName(account.getAccountName())
+                .status(account.getStatus())
+                .createdOn(account.getCreatedOn())
+                .createdBy(account.getCreatedBy())
+                .updatedOn(account.getUpdatedOn())
+                .updatedBy(account.getUpdatedBy())
+                .build();
+    }
 
     @Retryable(retryFor = {
             ObjectOptimisticLockingFailureException.class,  // for balance update failed when version not matched
@@ -50,7 +68,7 @@ public class AccountPostingService {
         if (account == null) {
             throw DataNotFoundException.accountNumberNotFound(request.getAccountNo());
         }
-        if (account.getAccountStatus() != AccountStatusEnum.ACTIVE) {
+        if (account.getStatus() != AccountStatusEnum.ACTIVE) {
             throw DataNotFoundException.accountNotActive(request.getAccountNo());
         }
         // validate balance
